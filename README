@@ -44,9 +44,9 @@ It should compile.
 Tutorial
 ~~~~~~~~
 
-Suppose you want to hide two filesystems using scubed, one with a size of about
-512MB and another with a size of about 10MB. Make a file with a size of 1250MB
-and fill it with pseudo random data.
+Suppose you want to hide two filesystems using scubed, one with a size of 512MB
+and another with a size of 10MB. Make a file with a size of 1250MB and fill it
+with pseudo random data.
 
 # dd if=/dev/urandom of=store bs=1M count=1250
 
@@ -75,6 +75,10 @@ blocksize is 2097152 bytes, overhead is 512 bytes
 The blocksize is automatically selected. Note that scubed doesn't know
 how many cryptographic views of /dev/loop0 exist (or if they are cryptographic
 at all).
+
+You may think of scubed as a partitioning tool. The amount of partitions 
+visible is equal to the amount of devices given on the command line, and
+the size of each partition can be edited.
 
 Now we will allocate space for our first filesystem, we need about 257 blocks
 on /dev/mapper/scubed1 (note: the -r means resize).
@@ -127,8 +131,15 @@ scubed doesn't have access to /dev/mapper/scubed2.
 This is nice and all, but how do we access our newly allocated spaces?
 Do it with the following command.
 
-# scubed -m /dev/mapper/scubed1 | dmsetup create scubed1.linear
+# scubed -M scubed1.linear /dev/mapper/scubed1
 # mke2fs -j -m 0 /dev/mapper/scubed1.linear
+
+The former command sets up a device mapper table though which the kernel
+(and filesystems) can access the blocks belonging to /dev/mapper/scubed1
+in a normal order. You can examine the table sent to the device mapper
+by doing
+
+# scubed -m /dev/mapper/scubed1
 
 To access the second filesystem; attach /dev/mapper/scubed2 (with
 the right password, check for yourself what happens with the wrong password,
@@ -143,13 +154,11 @@ How does it work?
 
 The main idea is taken from stegfs, that is: have a block table where each
 entry is encrypted with the key that belongs to the level to which the entry
-belongs. If you don't have the key, then you can't decode the block table
-entry and you don't know if the block is used.
+belongs. If you don't have the key, then you can't decode the block table entry
+and you don't know if the block is used.
 
-The blocksize is chosen such that there fit between about 512 and 1024 blocks 
-on the device. 
-
-For now: read the source. It's only about 600 lines, including (some) comments.
+For now: read the source. It's only approximately 600 lines, including (some)
+comments.
 
 
 References
