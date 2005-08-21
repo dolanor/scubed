@@ -469,6 +469,8 @@ void write_map() {
 	assert(no_devs == 1);
 	d = &devs[0];
 	
+	if (d->no_blocks == 0) FATAL("%s is zero sized", d->name);
+
 	for (i = 0; i < d->no_blocks; i++) 
 		printf("%llu %llu linear %s %llu\n", i*eff_block_size512, 
 				eff_block_size512,
@@ -485,6 +487,8 @@ void auto_map() {
 	assert(target);
 	assert(no_devs == 1);
 	d = &devs[0];
+
+	if (d->no_blocks == 0) FATAL("%s is zero sized", d->name);
 
 	if (!task) FATAL("unable to create dm_task for %s", target);
 	if (!dm_task_set_name(task, target)) 
