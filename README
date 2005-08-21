@@ -36,7 +36,7 @@ You need:
 Compiling
 ~~~~~~~~~
 
-Just type:
+Just type make in the directory with the Makefile and scubed.c.
 
 # make
 
