@@ -85,7 +85,7 @@ the size of each partition can be edited.
 Now we will allocate space for our first filesystem, we need about 256 blocks
 on /dev/mapper/scubed1 (note: the -r means resize).
 
-# scubed -r 0,257 /dev/mapper/scubed?
+# scubed -r 0,256 /dev/mapper/scubed?
 ---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---
 allocating 256 blocks for /dev/mapper/scubed1 from the unclaimed pool
 this is only safe if you listed ALL your devices associated
