@@ -96,7 +96,7 @@ blocksize is 2097664 bytes, overhead is 512 bytes
 0256 blocks in /dev/mapper/scubed1 (index 0)
 0000 blocks in /dev/mapper/scubed2 (index 1)
 0368 blocks unclaimed
-0622 blocks total
+0624 blocks total
 
 Now allocate space for our second filesystem.
 
