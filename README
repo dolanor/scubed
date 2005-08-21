@@ -1,0 +1,160 @@
+Simple Steganographic Store (scubed)
+------------------------------------
+
+
+Intro
+~~~~~
+
+With rubberhose [1], [2] gone, stegfs [3], [4] vast asleep and phonebook [5]
+having a (IMHO) weird and complex architecture the linux user wanting
+plausible denyability is at a loss. Until now...
+
+Let me introduce the Simple Steganographic Store:
+
+- Simple, the program works on a need to know basis, it doesn't know
+  encryption keys, modes etc, it is short and is easy to understand,
+  maintain and use. It's also easy to lose your data if you make a slight
+  mistake using this program.
+
+- Steganographic, I think it gives the user plausible denyability (a 
+  cryptologist/lawyer should probably speak up on this issue; I am neither).
+
+- Store, you can put stuff in it and retrieve it.
+
+
+Prerequisites
+~~~~~~~~~~~~~
+
+You need:
+- dmsetup and cryptsetup utilities
+- dm support in the kernel with dm-linear and dm-crypt
+- libdevmapper development files
+
+
+Compiling
+~~~~~~~~~
+
+Just type:
+
+# make
+
+It should compile. 
+
+
+Tutorial
+~~~~~~~~
+
+Suppose you want to hide two filesystems using scubed, one with a size of about
+512MB and another with a size of about 10MB. Make a file with a size of 1250MB
+and fill it with pseudo random data.
+
+# dd if=/dev/urandom of=store bs=1M count=1250
+
+Attach it to a loopdevice
+
+# losetup /dev/loop0 store
+
+Then create two different cryptographic 'views' of this device using 
+cryptsetup [6].
+
+# cryptsetup create scubed1 /dev/loop0
+Enter passphrase:
+# cryptsetup create scubed2 /dev/loop0
+Enter passphrase:
+
+Be sure to use different passphrases and be sure to remember them.
+Let's see wat scubed says.
+
+# scubed /dev/mapper/scubed?
+blocksize is 2097152 bytes, overhead is 512 bytes
+0000 blocks in /dev/mapper/scubed1 (index 0)
+0000 blocks in /dev/mapper/scubed2 (index 1)
+0625 blocks unclaimed
+0625 blocks total
+
+The blocksize is automatically selected. Note that scubed doesn't know
+how many cryptographic views of /dev/loop0 exist (or if they are cryptographic
+at all).
+
+Now we will allocate space for our first filesystem, we need about 257 blocks
+on /dev/mapper/scubed1 (note: the -r means resize).
+
+# scubed -r 0,257 /dev/mapper/scubed?
+---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---
+allocating 257 blocks for /dev/mapper/scubed1 from the unclaimed pool
+this is only safe if you listed ALL your devices associated
+with the store on the commandline, continue? [No] Yes
+
+Check if it worked.
+
+# scubed /dev/mapper/scubed?
+blocksize is 2097152 bytes, overhead is 512 bytes
+0257 blocks in /dev/mapper/scubed1 (index 0)
+0000 blocks in /dev/mapper/scubed2 (index 1)
+0368 blocks unclaimed
+0625 blocks total
+
+Now allocate space for our second filesystem.
+
+# scubed -r 1,5 /dev/mapper/scubed?
+---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---
+allocating 5 blocks for /dev/mapper/scubed2 from the unclaimed pool
+this is only safe if you listed ALL your devices associated
+with the store on the commandline, continue? [No] Yes
+
+Check again.
+
+# scubed /dev/mapper/scubed?
+blocksize is 2097152 bytes, overhead is 512 bytes
+0257 blocks in /dev/mapper/scubed1 (index 0)
+0005 blocks in /dev/mapper/scubed2 (index 1)
+0363 blocks unclaimed
+0625 blocks total
+
+How does plausible denyability come into play? Let's remove /dev/mapper/scubed2
+from the system.
+
+# cryptsetup remove scubed2
+# scubed /dev/mapper/scubed?
+blocksize is 2097152 bytes, overhead is 512 bytes
+0257 blocks in /dev/mapper/scubed1 (index 0)
+0368 blocks unclaimed
+0625 blocks total
+
+The blocks owned by /dev/mapper/scubed2 are listed as unclaimed, because
+scubed doesn't have access to /dev/mapper/scubed2. 
+
+This is nice and all, but how do we access our newly allocated spaces?
+Do it with the following command.
+
+# scubed -m /dev/mapper/scubed1 | dmsetup create scubed1.linear
+# mke2fs -j -m 0 /dev/mapper/scubed1.linear
+
+To access the second filesystem; attach /dev/mapper/scubed2 (with
+the right password, check for yourself what happens with the wrong password,
+but first try to guess) and repeat the above steps.
+
+Some scripts probably need to be written to make this all a bit more
+user friendly.
+
+
+How does it work?
+~~~~~~~~~~~~~~~~~
+
+TODO.
+
+
+References
+~~~~~~~~~~
+
+[1] http://www.rubberhose.org
+
+[2] http://www.mirrors.wiretapped.net/security/cryptography/filesystems/rubberhose/rubberhose-README.txt
+
+[3] http://www.mcdonald.org.uk/StegFS/
+
+[4] http://stegfs.sourceforge.net/
+
+[5] http://www.freenet.org.nz/phonebook/
+
+[6] http://www.saout.de/misc/dm-crypt/
