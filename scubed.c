@@ -148,17 +148,6 @@ void alloc_check_open_devices(int no_names, char **names) {
 	while ((no_blocks = size/(block_size=1+(hw_block_size<<i))) > 1024) i++;
 	block_size *= SECTOR;
 
-	
-	//if (no_blocks < 2048*100) FATAL("devices are WAY to small");
-
-	/* between 512 (excluded) and 1024 (included) blocks should be
-	 * enough to ensure deniability? */
-	/*
-	while (no_blocks >= 1024) {
-		no_blocks = no_blocks>>1;
-		block_size = block_size<<1;
-	}*/
-
 	eff_block_size512 = (block_size - SECTOR)/SECTOR;
 	VERBOSE("using %d blocks of %d + %d bytes", 
 			no_blocks, block_size - SECTOR, SECTOR);
@@ -285,11 +274,7 @@ void check_sanity() {
 	assert(blocks_seen == no_blocks);
 
 	for (i = 0; i < no_blocks; i++) {
-		if (bools[i] != 1) {
-			VERBOSE("block %d is never seen?!?!!?!", i);
-			assert(0);
-		}
-		//assert(bools[i] == 1);
+		assert(bools[i] == 1);
 	}
 	
 	VERBOSE("data seems sane");

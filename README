@@ -7,7 +7,7 @@ Intro
 
 With rubberhose [1], [2] gone, stegfs [3], [4] vast asleep and phonebook [5]
 having a (IMHO) weird and complex architecture the linux user wanting
-plausible denyability is at a loss. Until now...
+plausible deniability is at a loss. Until now...
 
 Let me introduce the Simple Steganographic Store:
 
@@ -16,7 +16,7 @@ Let me introduce the Simple Steganographic Store:
   maintain and use. It's also easy to lose your data if you make a slight
   mistake using this program.
 
-- Steganographic, I think it gives the user plausible denyability (a 
+- Steganographic, I think it gives the user plausible deniability (a 
   cryptologist/lawyer should probably speak up on this issue; I am neither).
 
 - Store, you can put stuff in it and retrieve it.
@@ -111,7 +111,7 @@ blocksize is 2097152 bytes, overhead is 512 bytes
 0363 blocks unclaimed
 0625 blocks total
 
-How does plausible denyability come into play? Let's remove /dev/mapper/scubed2
+How does plausible deniability come into play? Let's remove /dev/mapper/scubed2
 from the system.
 
 # cryptsetup remove scubed2
@@ -141,7 +141,15 @@ user friendly.
 How does it work?
 ~~~~~~~~~~~~~~~~~
 
-TODO.
+The main idea is taken from stegfs, that is: have a block table where each
+entry is encrypted with the key that belongs to the level to which the entry
+belongs. If you don't have the key, then you can't decode the block table
+entry and you don't know if the block is used.
+
+The blocksize is chosen such that there fit between about 512 and 1024 blocks 
+on the device. 
+
+For now: read the source. It's only about 600 lines, including (some) comments.
 
 
 References
