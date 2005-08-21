@@ -506,6 +506,13 @@ void auto_map() {
 	dm_lib_exit();
 }
 
+const char *version = "$Id$";
+
+void print_version() {
+	printf("%s\n", version);
+	exit(0);
+}
+
 int main(int argc, char **argv) {
 	int i, c;
 	enum command_e command = INFO;
@@ -517,7 +524,10 @@ int main(int argc, char **argv) {
 	exec_name = strrchr(argv[0], '/');
 	if (!exec_name++) exec_name = argv[0];
 
-	while ((c = getopt(argc, argv, "vr:mfM:")) != -1) switch (c) {
+	while ((c = getopt(argc, argv, "Vvr:mfM:")) != -1) switch (c) {
+		case 'V':
+			print_version();
+			break;
 		case 'v':
 			verbose = 1;
 			break;
