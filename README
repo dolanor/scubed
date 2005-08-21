@@ -29,6 +29,8 @@ You need:
 - dmsetup and cryptsetup utilities
 - dm support in the kernel with dm-linear and dm-crypt
 - libdevmapper development files
+- the latest version of scubed, get it with Subversion
+	svn co http://cube.dyndns.org/svn/scubed/trunk scubed
 
 
 Compiling
