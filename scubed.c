@@ -91,8 +91,8 @@ int *empty_blocks = NULL;
 
 void usage(const char *msg) {
 	if (msg && *msg != '\0') printf("%s\n", msg);
-	printf("Usage: %s [-v] [-f] [-m|-M NAME|-r DEVICENO,BLOCKS] "
-			"DEVICE1 [... DEVICEN]\n", 
+	printf("Usage: %s [-V] [-v] [-f] [-m|-M NAME|-r DEVICENO,BLOCKS] "
+			"DEVICE [DEVICES]\n", 
 			exec_name);
 	exit(msg?1:0);
 }

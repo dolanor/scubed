@@ -6,7 +6,7 @@ Intro
 ~~~~~
 
 With rubberhose [1], [2] gone, stegfs [3], [4] vast asleep and phonebook [5]
-having a (IMHO) weird and complex architecture the linux user wanting
+having a (IMHO) weird and complex architecture, the GNU/Linux user wanting
 plausible deniability is at a loss. Until now...
 
 Let me introduce the Simple Steganographic Store:
