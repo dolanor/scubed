@@ -109,7 +109,7 @@ with the store on the commandline, continue? [No] Yes
 Check again.
 
 # scubed /dev/mapper/scubed?
-blocksize is 2097152 bytes, overhead is 512 bytes
+blocksize is 2097664 bytes, overhead is 512 bytes
 0256 blocks in /dev/mapper/scubed1 (index 0)
 0005 blocks in /dev/mapper/scubed2 (index 1)
 0363 blocks unclaimed
@@ -120,7 +120,7 @@ from the system.
 
 # cryptsetup remove scubed2
 # scubed /dev/mapper/scubed?
-blocksize is 2097152 bytes, overhead is 512 bytes
+blocksize is 2097664 bytes, overhead is 512 bytes
 0256 blocks in /dev/mapper/scubed1 (index 0)
 0368 blocks unclaimed
 0624 blocks total
