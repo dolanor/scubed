@@ -74,13 +74,14 @@ blocksize is 2097664 bytes, overhead is 512 bytes
 0624 blocks unclaimed
 0624 blocks total
 
-The blocksize is automatically selected. Note that scubed doesn't know
-how many cryptographic views of /dev/loop0 exist (or if they are cryptographic
-at all).
+The blocksize is automatically selected. Note that scubed doesn't know how many
+cryptographic views of /dev/loop0 exist (or if they are cryptographic at all);
+it only knows about the ones you opened with cryptsetup and specified on the
+commandline.
 
-You may think of scubed as a partitioning tool. The amount of partitions 
-visible is equal to the amount of devices given on the command line, and
-the size of each partition can be edited.
+You may think of scubed as a partitioning tool. The amount of partitions
+visible is equal to the amount of devices given on the command line, and the
+size of each partition can be edited.
 
 Now we will allocate space for our first filesystem, we need about 256 blocks
 on /dev/mapper/scubed1 (note: the -r means resize).
