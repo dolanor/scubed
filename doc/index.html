@@ -5,8 +5,9 @@ Home of the Simple Steganograhic Store; scubed
 </TITLE>
 <BODY BGCOLOR="#FFFFFF">
 <CENTER>
-<IMG alt="freenetd" src="freenetd.png">
-A freenet daemon in C
+<!--<IMG alt="freenetd" src="freenetd.png">-->
+<H1>Simple Steganographic Store (scubed)</H1>
+Deniable encryption in GNU/Linux with <CODE>dm-crypt</CODE> and <CODE>dm-linear</CODE>
 <BR><A href="#intro">Introduction</a> | 
 <A href="#download">Download</a> | 
 <A href="#documentation">Documentation</a> | 
@@ -16,13 +17,60 @@ A freenet daemon in C
 
 <H2><A name="intro">Introduction</A></H2>
 
+With <a href=www.rubberhose.org>rubberhose</a> (wayback machine <a href="http://web.archive.org/web/*/http://www.rubberhose.org">search</a>) gone, <a href="http://www.mcdonald.org.uk/StegFS/">stegfs</a> vast asleep and <a href="http://www.freenet.org.nz/phonebook/">phonebook</a> having a (IMHO) weird and complex architecture (and dependencies on <a href="http://sf.net/projects/avf">fuse</a> and <a href="http://python.org/">Python</a>), the GNU/Linux user wanting plausibe deniability is at a loss. Until now...
+
+<P>
+Let me introduce the Simple Steganographics Store:
+
+<UL>
+<LI>Simple, the program is small, easy to understand, maintain and use.</LI>
+<LI>Steganographic, it should provide the user with <a href="http://en.wikipedia.org/wiki/Deniability">deniable</a> encryption.</LI>
+<LI>Store, it can be read from and written to through blockdevices</LI>
+</UL>
+
+<P><B>WARNING: You should see this program as an unreviewed bug-ridden hack.
+If you seriously need deniable encryption and you want to use this program, you
+are free to do so, but you should put it up for technical and legal review.
+Don't trust the stuff you read here, even though IANAL. Don't say I didn't warn
+you.</B>
+
+<P>How is plausibe deniability implemented? First some terminoligy. There is a
+raw device which contains the encrypted data. Using <code>cryptsetup</code> and
+<code>scubed</code> you can create between 512 and 1024 cryptographic views on
+the raw device. I will call those cryptographic views partitions.
+
+<P>Suppose you use scubed on a DVD+RW
+which can hold 4.377 GB. You have a partition of 2 GB, one of 1 GB and one of 600MB. This leaves about 0.791 GB of free space.
+
+<P>Now someone demands your encryption keys, this someone cannot see how many
+partitions you have, so you could give the keys to the first two partitions and
+claim that the rest is free space (reserved for a new partition or for
+expansion of an existing partition to enlarge the filesystem it contains).
+
+<P>Without the right passphrases even <code>scubed</code> itself can't say if
+the free space is truly free or is partly occupied by a hidden partition. This
+is why you need to tell <code>scubed</code> about <it>all</it> your partitions
+before you enlarge a partition or create a new one.
+
 <H2><A name="download">Download</A></H2>
 
+The latest development version of this program lives in a subversion repository
+which can be browsed using <a href="http://cube.dyndns.org/cgi-bin/viewcvs.cgi/?root=scubed">viewcvs</a>. Also there is public read-only access to
+the repository. If you have installed <a href="http://subversion.tigris.org/">
+subversion</a>, the source can be checked out by typing <CODE>svn checkout 
+http://cube.dyndns.org/svn/scubed/trunk scubed</CODE>. This command will 
+create a directory <CODE>scubed/</CODE> in the current directory and populate
+it with files.
+
 <H2><A name="documentation">Documentation</A></H2>
+
+See the <a href="http://cube.dyndns.org/svn/scubed/trunk/README">README</a> for more info.
 
 <H2><a name="links">Links</A></H2>
 
 <H2><a name="contact">Contact</A></H2>
 You can reach the author at <a href="mailto:rsnel@cube.dyndns.org">rsnel@cube.dyndns.org</a>.
+
+$Id $
 </BODY>
 </HTML>
