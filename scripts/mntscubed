@@ -1,0 +1,36 @@
+#!/bin/sh
+# mntscubed - script to mount a scubed(1) filesystem
+# 
+# The script uses sudo(8) to execute privileged commands, it also
+# assumes the user has permission to mount through fstab
+#
+# Make sure these parameters match those you used when you created
+# the scubed partition.
+MODE=aes-cbc-essiv:sha256
+KEYBITS=256
+
+if [ ! "$#"="2" -o  ! -b $1 -o ! -d $2 ]; then
+	echo "Usage: $0 DEVICE PATH"
+	exit 1
+fi
+
+# name of the decrypted (with the scubed blocks in no particular order)
+SDEV=$USER.`dd if=/dev/urandom bs=1 count=4 2> /dev/null | xxd -p`
+
+# name of the device with the encrypted data
+DEV=$1
+
+# name of the linearized device
+MDEV=`basename $2`
+
+sudo cryptsetup -c $MODE -s $KEYBITS create $SDEV $DEV
+if ! sudo scubed -M $MDEV /dev/mapper/$SDEV; then
+	# scubed generates an appropriate error message
+	sudo cryptsetup remove $SDEV
+	exit 1
+fi
+if ! mount $2; then
+	sudo dmsetup remove $MDEV
+	sudo cryptsetup remove $SDEV
+	exit 1
+fi

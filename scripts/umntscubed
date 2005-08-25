@@ -1,0 +1,26 @@
+#!/bin/sh
+# simple script to umount a scubed filesystem
+if [ "$#" != "1" ]; then
+	echo Usage: $0 PATH
+	exit 1
+fi
+DEV=`basename $1`
+if [ ! -b /dev/mapper/$DEV ]; then
+	echo /dev/mapper/$1 does not exist
+	exit
+fi
+PAIR=`sudo dmsetup deps $DEV | sed "s/^.*(\(.*\))\$/\1/"`
+MAJ=`echo $PAIR | cut -f 1 -d ,`
+MIN=`echo $PAIR | cut -f 2 -d ,`
+BACKDEV=`ls /dev/mapper/ -l | grep -e "root root \+$MAJ *, *$MIN " | sed "s/^.*\(rsnel.[[:xdigit:]]\+\)\$/\1/"`
+if [ ! -b /dev/mapper/$BACKDEV ]; then
+	echo fatal error, investigate
+	exit 1
+fi
+if umount /dev/mapper/$DEV; then
+	sudo dmsetup remove $DEV
+	sudo cryptsetup remove $BACKDEV
+else
+	echo "umntscubed: umount $1 failed"
+	exit 1
+fi
