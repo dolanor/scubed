@@ -14,7 +14,7 @@ if [ ! "$#"="2" -o  ! -b $1 -o ! -d $2 ]; then
 	exit 1
 fi
 
-# name of the decrypted (with the scubed blocks in no particular order)
+# name of the decrypted device (with the scubed blocks in no particular order)
 SDEV=$USER.`dd if=/dev/urandom bs=1 count=4 2> /dev/null | xxd -p`
 
 # name of the device with the encrypted data
