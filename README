@@ -148,8 +148,8 @@ To access the second filesystem; attach /dev/mapper/scubed2 (with
 the right password, check for yourself what happens with the wrong password,
 but first try to guess) and repeat the above steps.
 
-Some scripts probably need to be written to make this all a bit more
-user friendly.
+Some scripts to make this more user-friendly (but less understandable)
+are in the scripts/ directory. See the file scripts/SCRIPTS.
 
 
 How does it work?

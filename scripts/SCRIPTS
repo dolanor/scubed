@@ -1,0 +1,105 @@
+Some scripts
+------------
+
+
+scubedisk
+~~~~~~~~~
+
+This listing illustrates how the interactive script scubedisk can be
+used to reproduce the example in the README file.
+
+# dd if=/dev/urandom of=store bs=1M count=1250
+# losetup /dev/loop0 store
+# scubedisk /dev/loop0
+scubed:/dev/loop0> add scubed1
+Enter passphrase: 
+Verify passphrase: 
+scubed:/dev/loop0> add scubed2
+Enter passphrase: 
+Verify passphrase: 
+scubed:/dev/loop0> p
+blocksize is 2097664 bytes, overhead is 512 bytes
+0000 blocks in /dev/mapper/scubed1 (index 0)
+0000 blocks in /dev/mapper/scubed2 (index 1)
+0624 blocks unclaimed
+0624 blocks total
+scubed:/dev/loop0> resize 0,256
+---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---
+allocating 256 blocks for /dev/mapper/scubed1 from the unclaimed pool
+this is only safe if you listed ALL your devices associated
+with the store on the commandline, continue? [No] Yes
+scubed:/dev/loop0> resize 1,5
+---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---WARNING---
+allocating 5 blocks for /dev/mapper/scubed2 from the unclaimed pool
+this is only safe if you listed ALL your devices associated
+with the store on the commandline, continue? [No] Yes
+scubed:/dev/loop0> p
+blocksize is 2097664 bytes, overhead is 512 bytes
+0256 blocks in /dev/mapper/scubed1 (index 0)
+0005 blocks in /dev/mapper/scubed2 (index 1)
+0363 blocks unclaimed
+0624 blocks total
+scubed:/dev/loop0> mkfs 0
+creating fs on /dev/mapper/scubed1, are you sure? [No] Yes
+mke2fs 1.37 (21-Mar-2005)
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+131072 inodes, 524288 blocks
+0 blocks (0.00%) reserved for the super user
+First data block=1
+64 block groups
+8192 blocks per group, 8192 fragments per group
+2048 inodes per group
+Superblock backups stored on blocks: 
+	8193, 24577, 40961, 57345, 73729, 204801, 221185, 401409
+
+Writing inode tables:  done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 25 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+scubed:/dev/loop0> mkfs 1
+creating fs on /dev/mapper/scubed2, are you sure? [No] Yes
+mke2fs 1.37 (21-Mar-2005)
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+2560 inodes, 10240 blocks
+0 blocks (0.00%) reserved for the super user
+First data block=1
+2 block groups
+8192 blocks per group, 8192 fragments per group
+1280 inodes per group
+Superblock backups stored on blocks: 
+	8193
+
+Writing inode tables: done                            
+Creating journal (1024 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 32 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+scubed:/dev/loop0> quit
+#
+
+
+mntscubed
+~~~~~~~~~
+
+The filesystems now existing in /dev/loop0 can be mounted with mntscubed
+# mntscubed /dev/loop0 /mnt/mountpoint
+
+Which of the filesystems you get is only determined by which passphrase
+you type.
+
+
+umntscubed
+~~~~~~~~~~
+
+The filesystem you just mounted can be umounted
+# umntscubed mountpoint
+
