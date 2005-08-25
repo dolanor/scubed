@@ -1,8 +1,10 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
-<HEADER>
+<HEAD>
 <TITLE>
 Home of the Simple Steganograhic Store; scubed
 </TITLE>
+</HEAD>
 <BODY BGCOLOR="#FFFFFF">
 <CENTER>
 <!--<IMG alt="freenetd" src="freenetd.png">-->
@@ -36,8 +38,8 @@ you.</B>
 
 <P>How is plausibe deniability implemented? First some terminoligy. There is a
 raw device which contains the encrypted data. Using <code>cryptsetup</code> and
-<code>scubed</code> you can create between 512 and 1024 cryptographic views on
-the raw device. I will call those cryptographic views partitions.
+<code>scubed</code> you can create at most between 512 and 1024 cryptographic
+views on the raw device. I will call those cryptographic views partitions.
 
 <P>Suppose you use scubed on a DVD+RW
 which can hold 4.377 GB. You have a partition of 2 GB, one of 1 GB and one of 600MB. This leaves about 0.791 GB of free space.
@@ -49,7 +51,7 @@ expansion of an existing partition to enlarge the filesystem it contains).
 
 <P>Without the right passphrases even <code>scubed</code> itself can't say if
 the free space is truly free or is partly occupied by a hidden partition. This
-is why you need to tell <code>scubed</code> about <it>all</it> your partitions
+is why you need to tell <code>scubed</code> about <i>all</i> your partitions
 before you enlarge a partition or create a new one.
 
 <P>A small tutorial is contained in the README file.
