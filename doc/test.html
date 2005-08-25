@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+
+<HTML>
+<HEAD>
+  <META name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 12 April 2005), see www.w3.org">
+
+  <TITLE>Home of the Simple Steganograhic Store; scubed</TITLE>
+</HEAD>
+
+<BODY bgcolor="#FFFFFF">
+  <CENTER>
+    <!--<IMG alt="freenetd" src="freenetd.png">-->
+
+    <H1>Simple Steganographic Store (scubed)</H1>Deniable
+    encryption in GNU/Linux with <CODE>dm-crypt</CODE> and
+    <CODE>dm-linear</CODE><BR>
+    <A href="#intro">Introduction</A> | <A href=
+    "#download">Download</A> | <A href=
+    "#documentation">Documentation</A> | 
+    <!--<A href="#links">Links</A> | -->
+    <A href="#contact">Contact</A>
+  </CENTER>
+
+  <H2><A name="intro">Introduction</A></H2>With <A href=
+  "www.rubberhose.org">rubberhose</A> (wayback machine <A href=
+  "http://web.archive.org/web/*/http://www.rubberhose.org">search</A>)
+  gone, <A href="http://www.mcdonald.org.uk/StegFS/">stegfs</A>
+  vast asleep and <A href=
+  "http://www.freenet.org.nz/phonebook/">phonebook</A> having a
+  (IMHO) weird and complex architecture (and dependencies on
+  <A href="http://sf.net/projects/avf">fuse</A> and <A href=
+  "http://python.org/">Python</A>), the GNU/Linux user wanting
+  plausibe deniability is at a loss. Until now...
+
+  <P>Let me introduce the Simple Steganographics Store:</P>
+
+  <UL>
+    <LI>Simple, the program is small, easy to understand, maintain
+    and use.</LI>
+
+    <LI>Steganographic, it should provide the user with <A href=
+    "http://en.wikipedia.org/wiki/Deniability">deniable</A>
+    encryption.</LI>
+
+    <LI>Store, it can be read from and written to through
+    blockdevices</LI>
+  </UL>
+
+  <P><B>WARNING: You should see this program as an unreviewed
+  bug-ridden hack. If you seriously need deniable encryption and
+  you want to use this program, you are free to do so, but you
+  should put it up for technical and legal review. Don't trust the
+  stuff you read here, even though IANAL. Don't say I didn't warn
+  you.</B></P>
+
+  <P>How is plausibe deniability implemented? First some
+  terminoligy. There is a raw device which contains the encrypted
+  data. Using <CODE>cryptsetup</CODE> and <CODE>scubed</CODE> you
+  can create at most between 512 and 1024 cryptographic views on
+  the raw device. I will call those cryptographic views
+  partitions.</P>
+
+  <P>Suppose you use scubed on a DVD+RW which can hold 4.377 GB.
+  You have a partition of 2 GB, one of 1 GB and one of 600MB. This
+  leaves about 0.791 GB of free space.</P>
+
+  <P>Now someone demands your encryption keys, this someone cannot
+  see how many partitions you have, so you could give the keys to
+  the first two partitions and claim that the rest is free space
+  (reserved for a new partition or for expansion of an existing
+  partition to enlarge the filesystem it contains).</P>
+
+  <P>Without the right passphrases even <CODE>scubed</CODE> itself
+  can't say if the free space is truly free or is partly occupied
+  by a hidden partition. This is why you need to tell
+  <CODE>scubed</CODE> about <I>all</I> your partitions before you
+  enlarge a partition or create a new one.</P>
+
+  <P>A small tutorial is contained in the README file.</P>
+
+  <H2><A name="download">Download</A></H2>The latest development
+  version of this program lives in a subversion repository which
+  can be browsed using <A href=
+  "http://cube.dyndns.org/cgi-bin/viewcvs.cgi/?root=scubed">viewcvs</A>.
+  Also there is public read-only access to the repository. If you
+  have installed <A href=
+  "http://subversion.tigris.org/">subversion</A>, the source can be
+  checked out by typing <CODE>svn checkout
+  http://cube.dyndns.org/svn/scubed/trunk scubed</CODE>. This
+  command will create a directory <CODE>scubed/</CODE> in the
+  current directory and populate it with files.
+
+  <H2><A name="documentation">Documentation</A></H2>See the
+  <A href="http://cube.dyndns.org/svn/scubed/trunk/README">README</A>
+  for more info. <!--<H2><a name="links">Links</A></H2>-->
+
+  <H2><A name="contact">Contact</A></H2>You can reach the author at
+  <A href="mailto:rsnel@cube.dyndns.org">rsnel@cube.dyndns.org</A>.
+
+  <P><CODE>$Id: index.html 22 2005-08-25 14:51:00Z rsnel
+  $</CODE></P>
+</BODY>
+</HTML>
