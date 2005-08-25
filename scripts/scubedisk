@@ -1,0 +1,161 @@
+#!/bin/bash
+MODE=aes-cbc-essiv:sha256
+KEYBITS=256
+PROGNAME=`basename $0` || exit 1
+LINDEV=linear.$RANDOM$RANDOM
+
+function debug {
+        if [ "$DEBUG" = "1" ]; then echo "${PROGNAME}:debug:$1" 1>&2; fi
+}
+
+function usage {
+        echo "Usage: ${PROGNAME} BASE_DEVICE"
+        exit
+}
+
+DMSETUP=dmsetup
+while [ "$1" != "" ]; do
+        case $1 in
+                -D | --debug )
+                        shift
+                        DEBUG=1
+                        ;;
+                -h | --help )
+                        usage
+                        ;;
+                -* )
+                        echo "$PROGNAME: unrecognized option \`$1'"
+                        echo "Try \`$PROGNAME --help' for more information."
+                        exit 1
+                        ;;
+                * )
+                        break;
+                        ;;
+        esac
+done
+
+if [ "$#" != 1 ]; then
+	echo "$PROGNAME: no base device given"
+	echo "Try \`$PROGNAME --help' for more information."
+	exit 1
+fi
+
+function dmsetup_remove {
+	debug "removing $1"
+	$DMSETUP remove $1
+}
+
+function cleanup {
+        debug "cleanup called, arg=$1"
+        trap - EXIT HUP INT TERM ERR
+	for i in "${PARTITIONS[@]}"; do
+        	dmsetup_remove $i
+	done
+	if dmsetup ls $LINDEV > /dev/null 2>&1; then
+		dmsetup_remove $LINDEV
+	fi
+	exit $1
+}
+
+function fatal {
+        echo "${PROGNAME}:${1:-"unknown error"}" 1>&2
+        cleanup 1
+}
+
+function sig_handler_HUPINTTERM {
+        fatal "cought HUP, INT or TERM signal, exiting"
+}
+
+function sig_handler_ERR {
+        cleanup 1
+}
+
+function sig_handler_EXIT {
+        cleanup 0
+}
+
+trap sig_handler_HUPINTTERM HUP INT TERM
+trap sig_handler_ERR ERR
+trap sig_handler_EXIT EXIT
+
+[ ! -b $1 ] && fatal "$1 is not a blockdevice"
+
+while true; do
+	read -p "scubed:$1> " CMND ARG
+	debug "got CMND=\"$CMND\" with ARG=\"$ARG\""
+
+	case $CMND in
+		quit | exit | q)
+			exit
+			;;
+		print | p | i | info)
+			if [ "${#PARTITIONS[@]}" = "0" ]; then
+				echo no partitions open, no info
+			else
+				scubed "${PARTITIONS[@]}"
+			fi
+			;;
+		open)
+			if [ "$ARG" = "" ]; then
+				echo open requires an argument
+				#continue
+			else 
+				cryptsetup -c $MODE -s $KEYBITS create $ARG $1
+				SIZE=$((`scubed /dev/mapper/$ARG | head -n 2 | tail -n 1 | cut -f 1 -d ' '`))
+				if [ "$SIZE" = "0" ]; then
+					dmsetup_remove /dev/mapper/$ARG
+					echo "partition has zero size or passphrase wrong, use add or retry"
+				else
+					PARTITIONS=( ${PARTITIONS[@]} /dev/mapper/$ARG )
+				fi
+			fi
+			;;
+		add | create)
+			if cryptsetup -y -c $MODE -s $KEYBITS create $ARG $1
+			then
+				PARTITIONS=( ${PARTITIONS[@]} /dev/mapper/$ARG )
+				#PARTITIONS[${#PARTITIONS[@]}]=/dev/mapper/$ARG
+			else
+				echo "passphrases probably didn't match"
+			fi
+			;;
+		close)
+			if [ "$ARG" -ge "0" -a "$ARG" -lt "${#PARTITIONS[@]}" ]; then
+				dmsetup remove ${PARTITIONS[$ARG]}
+				unset PARTITIONS[$ARG]
+				PARTITIONS=( ${PARTITIONS[@]} )
+			else
+				echo "device with index $ARG does not exist"
+			fi
+			;;
+		resize)
+			scubed -r $ARG "${PARTITIONS[@]}"
+			;;
+		mkfs)
+			if [ "$ARG" = "" ]; then
+				echo "$CMND requires an argument"
+				continue
+			fi
+			SIZE=$((`scubed ${PARTITIONS[$ARG]} | head -n 2 | tail -n 1 | cut -f 1 -d ' '`))
+			if [ "$SIZE" = "0" ]; then
+				echo "unable to create fs, partition size is 0"
+				continue
+			fi
+			echo -n "creating fs on ${PARTITIONS[$ARG]}, are you sure? [No] "
+			while true; do
+				read ANS
+				if [ "$ANS" = "" -o "$ANS" = "No" ]; then
+					echo "NO!"
+					break;
+				fi
+				if [ "$ANS" = "Yes" ]; then
+					scubed -M $LINDEV ${PARTITIONS[$ARG]}
+					mke2fs -j -m 0 /dev/mapper/$LINDEV
+					dmsetup remove $LINDEV
+					break;
+				fi
+				echo -n "Please answer Yes or No. [No] "
+			done
+			;;
+	esac
+done
