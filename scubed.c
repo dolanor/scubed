@@ -562,7 +562,7 @@ int main(int argc, char **argv) {
 	
 	if (argc - optind == 0) usage("no devices specified");
 
-	if ((command == MAP || command == MAP_AUTO) && argc - optind != 1) usage("only one device may be specifed wit option -m");
+	if ((command == MAP || command == MAP_AUTO) && argc - optind != 1) usage("only one device may be specifed with option -m");
 
 	VERBOSE("version: %s", version);
 
