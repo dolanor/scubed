@@ -9,7 +9,7 @@
 MODE=aes-cbc-essiv:sha256
 KEYBITS=256
 
-if [ ! "$#"="2" -o  ! -b $1 -o ! -d $2 ]; then
+if [ ! "$#"="2" -o  ! -b "$1" -o ! -d "$2" ]; then
 	echo "Usage: $0 DEVICE PATH"
 	exit 1
 fi
