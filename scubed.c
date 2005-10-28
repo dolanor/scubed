@@ -380,7 +380,7 @@ void enlarge(struct dev_s *d, int alloc) {
  * special equipment is needed to read it, if this is a concern you 
  * can up your chances of really detroying the data with using
  * wipe(1), shred(1) or srm(1) on the linearized device before
- * you start deleing blocks */
+ * you start deleting blocks */
 void destroy_block(struct dev_s *d) {
 	struct block_head head;
 	int i, block;
