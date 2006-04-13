@@ -376,14 +376,11 @@ void enlarge(struct dev_s *d, int alloc) {
 	while (alloc--) alloc_block(d);
 }	
 
-/* block gets overwritten with random data, data is still there, but 
- * special equipment is needed to read it, if this is a concern you 
- * can up your chances of really detroying the data with using
- * wipe(1), shred(1) or srm(1) on the linearized device before
- * you start deleting blocks */
-void destroy_block(struct dev_s *d) {
-	struct block_head head;
-	int i, block;
+/* block gets overwritten with random data, data is still there, but special
+ * equipment is needed to read it, if this is a concern you can up your chances
+ * of really destroying the data by using wipe(1), shred(1) or srm(1) on the
+ * linearized device before you start deleting blocks */
+void destroy_block(struct dev_s *d) { struct block_head head; int i, block;
 
 	block = d->blocks[d->no_blocks - 1];
 
@@ -453,7 +450,9 @@ void resize() {
 	if (dev_no < 0 || dev_no > no_devs) FATAL("illegal device %d", dev_no);
 	d = &devs[dev_no];
 	alloc = goal - d->no_blocks;
-	if (alloc > no_empty_blocks) FATAL("requested new size too large, nog enought unclaimed blocks");
+	if (alloc > no_empty_blocks) 
+		FATAL("requested new size too large, "
+				"not enough unclaimed blocks");
 	if (alloc == 0) return; /* nothing to do */
 	if (alloc < 0) shrink(d, alloc);
 	if (alloc > 0) enlarge(d, alloc);
@@ -539,20 +538,25 @@ int main(int argc, char **argv) {
 			force = 1;
 			break;
 		case 'r':
-			if (command != INFO) usage("only one command allowed at a time");
+			if (command != INFO) usage("only one command allowed "
+					"at a time");
 			command = RESIZE;
 			dev_no = strtol(optarg, &tmp, 10);
-			if (*tmp != ',') usage("wrong argument to -r (junk before comma or no comma)");
+			if (*tmp != ',') usage("wrong argument to -r (junk "
+					"before comma or no comma)");
 			optarg = tmp + 1;
 			goal = strtol(optarg, &tmp, 10);
-			if (*tmp != '\0') usage("wrong argument to -r (junk after comma)");
+			if (*tmp != '\0') usage("wrong argument to -r (junk "
+					"after comma)");
 			break;
 		case 'm':
-			if (command != INFO) usage("only one command allowed at a time");
+			if (command != INFO) 
+				usage("only one command allowed at a time");
 			command = MAP;
 			break;
 		case 'M':
-			if (command != INFO) usage("only one command allowed at a time");
+			if (command != INFO) 
+				usage("only one command allowed at a time");
 			target = optarg;
 			command = MAP_AUTO;
 			break;
@@ -562,7 +566,8 @@ int main(int argc, char **argv) {
 	
 	if (argc - optind == 0) usage("no devices specified");
 
-	if ((command == MAP || command == MAP_AUTO) && argc - optind != 1) usage("only one device may be specifed with option -m");
+	if ((command == MAP || command == MAP_AUTO) && argc - optind != 1) 
+		usage("only one device may be specifed with option -m");
 
 	VERBOSE("version: %s", version);
 
