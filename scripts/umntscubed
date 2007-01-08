@@ -13,7 +13,7 @@ MAJ=`echo $PAIR | cut -f 1 -d ,`
 MIN=`echo $PAIR | cut -f 2 -d ,`
 #echo depends: $MAJ,$MIN
 BACKDEV=`ls /dev/mapper/ -l | grep -e "root \+disk \+$MAJ *, *$MIN " | sed "s/^.*\($USER.[[:xdigit:]]\+\)\$/\1/"`
-echo "backing device is $BACKDEV"
+#echo "backing device is $BACKDEV"
 if [ ! -b /dev/mapper/$BACKDEV ]; then
 	echo fatal error, investigate
 	exit 1
