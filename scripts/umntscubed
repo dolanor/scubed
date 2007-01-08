@@ -1,5 +1,4 @@
 #!/bin/sh
-# simple script to umount a scubed filesystem
 if [ "$#" != "1" ]; then
 	echo Usage: $0 PATH
 	exit 1
@@ -12,7 +11,9 @@ fi
 PAIR=`sudo dmsetup deps $DEV | sed "s/^.*(\(.*\))\$/\1/"`
 MAJ=`echo $PAIR | cut -f 1 -d ,`
 MIN=`echo $PAIR | cut -f 2 -d ,`
-BACKDEV=`ls /dev/mapper/ -l | grep -e "root root \+$MAJ *, *$MIN " | sed "s/^.*\(rsnel.[[:xdigit:]]\+\)\$/\1/"`
+#echo depends: $MAJ,$MIN
+BACKDEV=`ls /dev/mapper/ -l | grep -e "root \+disk \+$MAJ *, *$MIN " | sed "s/^.*\(rsnel.[[:xdigit:]]\+\)\$/\1/"`
+#echo "backing device is $BACKDEV"
 if [ ! -b /dev/mapper/$BACKDEV ]; then
 	echo fatal error, investigate
 	exit 1
