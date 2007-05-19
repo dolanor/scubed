@@ -127,6 +127,7 @@ void alloc_check_open_devices(int no_names, char **names) {
 			FATAL("impossible: %s", strerror(errno));
 		if (ioctl(fd, BLKGETSIZE, &thissize) == -1)
 			FATAL("ioctl on %s: %s", d->name, strerror(errno));
+		//VERBOSE("device %s has size %d", d->name, thissize);
 		if (size == -1) size = thissize;
 		else if (size != thissize) 
 			FATAL("devices have different sizes");
@@ -512,7 +513,7 @@ void auto_map() {
 const char *version = "$Id$";
 
 void print_version() {
-	printf("scubed - %s\n", version);
+	printf("scubed - %.1f (%s)\n", VERSION, version);
 	exit(0);
 }
 

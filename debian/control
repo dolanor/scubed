@@ -1,0 +1,12 @@
+Source: scubed
+Section: admin
+Priority: optional
+Maintainer: Rik Snel <rsnel@cube.dyndns.org>
+Build-Depends: debhelper (>= 5), libdevmapper-dev
+Standards-Version: 3.7.2
+
+Package: scubed
+Architecture: any
+Depends: ${shlibs:Depends}, cryptsetup
+Description: program to create, manage and access hidden volumes
+ This program enables you to create so called 'hidden volumes', blah blah.

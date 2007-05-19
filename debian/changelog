@@ -1,0 +1,7 @@
+scubed (0.1) unstable; urgency=low
+
+  * Initial Release.
+  * This is my first Debian package
+  * Added install target with $DESTDIR to Makefile
+
+ -- Rik Snel <rsnel@cube.dyndns.org>  Sat, 19 May 2007 21:07:01 +0200
