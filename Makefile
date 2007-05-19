@@ -6,3 +6,6 @@ scubed:
 
 clean:
 	rm -f scubed
+
+install: scubed
+	install ./scubed $(DESTDIR)/sbin
