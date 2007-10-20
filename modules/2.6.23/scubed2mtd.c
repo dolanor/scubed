@@ -1,7 +1,7 @@
 /*
- * $Id: block2mtd.c,v 1.30 2005/11/29 14:48:32 gleixner Exp $
+ * $Id: scubed2mtd.c,v 1.30 2005/11/29 14:48:32 gleixner Exp $
  *
- * block2mtd.c - create an mtd from a block device
+ * scubed2mtd.c - create an mtd from a scubed partition
  *
  * Copyright (C) 2001,2002	Simon Evans <spse@secret.org.uk>
  * Copyright (C) 2004-2006	Jörn Engel <joern@wh.fh-wedel.de>
@@ -23,12 +23,13 @@
 #define VERSION "$Revision: 1.30 $"
 
 
-#define ERROR(fmt, args...) printk(KERN_ERR "block2mtd: " fmt "\n" , ## args)
-#define INFO(fmt, args...) printk(KERN_INFO "block2mtd: " fmt "\n" , ## args)
+#define ERROR(fmt, args...) printk(KERN_ERR "scubed2mtd: " fmt "\n" , ## args)
+#define INFO(fmt, args...) printk(KERN_INFO "scubed2mtd: " fmt "\n" , ## args)
 
 
 /* Info for the block device */
-struct block2mtd_dev {
+struct scubed2mtd_dev {
+	loff_t last_written_block;
 	struct list_head list;
 	struct block_device *blkdev;
 	struct mtd_info mtd;
@@ -46,7 +47,7 @@ static struct page *page_read(struct address_space *mapping, int index)
 }
 
 /* erase a specified part of the device */
-static int _block2mtd_erase(struct block2mtd_dev *dev, loff_t to, size_t len)
+static int _scubed2mtd_erase(struct scubed2mtd_dev *dev, loff_t to, size_t len)
 {
 	struct address_space *mapping = dev->blkdev->bd_inode->i_mapping;
 	struct page *page;
@@ -78,16 +79,16 @@ static int _block2mtd_erase(struct block2mtd_dev *dev, loff_t to, size_t len)
 	}
 	return 0;
 }
-static int block2mtd_erase(struct mtd_info *mtd, struct erase_info *instr)
+static int scubed2mtd_erase(struct mtd_info *mtd, struct erase_info *instr)
 {
-	struct block2mtd_dev *dev = mtd->priv;
+	struct scubed2mtd_dev *dev = mtd->priv;
 	size_t from = instr->addr;
 	size_t len = instr->len;
 	int err;
 
 	instr->state = MTD_ERASING;
 	mutex_lock(&dev->write_mutex);
-	err = _block2mtd_erase(dev, from, len);
+	err = _scubed2mtd_erase(dev, from, len);
 	mutex_unlock(&dev->write_mutex);
 	if (err) {
 		ERROR("erase failed err = %d", err);
@@ -101,10 +102,10 @@ static int block2mtd_erase(struct mtd_info *mtd, struct erase_info *instr)
 }
 
 
-static int block2mtd_read(struct mtd_info *mtd, loff_t from, size_t len,
+static int scubed2mtd_read(struct mtd_info *mtd, loff_t from, size_t len,
 		size_t *retlen, u_char *buf)
 {
-	struct block2mtd_dev *dev = mtd->priv;
+	struct scubed2mtd_dev *dev = mtd->priv;
 	struct page *page;
 	int index = from >> PAGE_SHIFT;
 	int offset = from & (PAGE_SIZE-1);
@@ -145,7 +146,7 @@ static int block2mtd_read(struct mtd_info *mtd, loff_t from, size_t len,
 
 
 /* write data to the underlying device */
-static int _block2mtd_write(struct block2mtd_dev *dev, const u_char *buf,
+static int _scubed2mtd_write(struct scubed2mtd_dev *dev, const u_char *buf,
 		loff_t to, size_t len, size_t *retlen)
 {
 	struct page *page;
@@ -188,10 +189,11 @@ static int _block2mtd_write(struct block2mtd_dev *dev, const u_char *buf,
 }
 
 
-static int block2mtd_write(struct mtd_info *mtd, loff_t to, size_t len,
+static int scubed2mtd_write(struct mtd_info *mtd, loff_t to, size_t len,
 		size_t *retlen, const u_char *buf)
 {
-	struct block2mtd_dev *dev = mtd->priv;
+	struct scubed2mtd_dev *dev = mtd->priv;
+	loff_t temp = to;
 	int err;
 
 	if (!len)
@@ -201,8 +203,15 @@ static int block2mtd_write(struct mtd_info *mtd, loff_t to, size_t len,
 	if (to + len > mtd->size)
 		len = mtd->size - to;
 
+	do_div(temp, mtd->erasesize);
+
+	if (temp != dev->last_written_block) {
+		INFO("different block written %llu", temp);
+		dev->last_written_block = temp;
+	}
+
 	mutex_lock(&dev->write_mutex);
-	err = _block2mtd_write(dev, buf, to, len, retlen);
+	err = _scubed2mtd_write(dev, buf, to, len, retlen);
 	mutex_unlock(&dev->write_mutex);
 	if (err > 0)
 		err = 0;
@@ -211,15 +220,15 @@ static int block2mtd_write(struct mtd_info *mtd, loff_t to, size_t len,
 
 
 /* sync the device - wait until the write queue is empty */
-static void block2mtd_sync(struct mtd_info *mtd)
+static void scubed2mtd_sync(struct mtd_info *mtd)
 {
-	struct block2mtd_dev *dev = mtd->priv;
+	struct scubed2mtd_dev *dev = mtd->priv;
 	sync_blockdev(dev->blkdev);
 	return;
 }
 
 
-static void block2mtd_free_device(struct block2mtd_dev *dev)
+static void scubed2mtd_free_device(struct scubed2mtd_dev *dev)
 {
 	if (!dev)
 		return;
@@ -237,15 +246,15 @@ static void block2mtd_free_device(struct block2mtd_dev *dev)
 
 
 /* FIXME: ensure that mtd->size % erase_size == 0 */
-static struct block2mtd_dev *add_device(char *devname, int erase_size)
+static struct scubed2mtd_dev *add_device(char *devname, int erase_size)
 {
 	struct block_device *bdev;
-	struct block2mtd_dev *dev;
+	struct scubed2mtd_dev *dev;
 
 	if (!devname)
 		return NULL;
 
-	dev = kzalloc(sizeof(struct block2mtd_dev), GFP_KERNEL);
+	dev = kzalloc(sizeof(struct scubed2mtd_dev), GFP_KERNEL);
 	if (!dev)
 		return NULL;
 
@@ -268,6 +277,7 @@ static struct block2mtd_dev *add_device(char *devname, int erase_size)
 		ERROR("error: cannot open device %s", devname);
 		goto devinit_err;
 	}
+	dev->last_written_block = -1;
 	dev->blkdev = bdev;
 
 	if (MAJOR(bdev->bd_dev) == MTD_BLOCK_MAJOR) {
@@ -279,23 +289,23 @@ static struct block2mtd_dev *add_device(char *devname, int erase_size)
 
 	/* Setup the MTD structure */
 	/* make the name contain the block device in */
-	dev->mtd.name = kmalloc(sizeof("block2mtd: ") + strlen(devname),
+	dev->mtd.name = kmalloc(sizeof("scubed2mtd: ") + strlen(devname),
 			GFP_KERNEL);
 	if (!dev->mtd.name)
 		goto devinit_err;
 
-	sprintf(dev->mtd.name, "block2mtd: %s", devname);
+	sprintf(dev->mtd.name, "scubed2mtd: %s", devname);
 
 	dev->mtd.size = dev->blkdev->bd_inode->i_size & PAGE_MASK;
 	dev->mtd.erasesize = erase_size;
 	dev->mtd.writesize = 1;
 	dev->mtd.type = MTD_RAM;
 	dev->mtd.flags = MTD_CAP_RAM;
-	dev->mtd.erase = block2mtd_erase;
-	dev->mtd.write = block2mtd_write;
+	dev->mtd.erase = scubed2mtd_erase;
+	dev->mtd.write = scubed2mtd_write;
 	dev->mtd.writev = default_mtd_writev;
-	dev->mtd.sync = block2mtd_sync;
-	dev->mtd.read = block2mtd_read;
+	dev->mtd.sync = scubed2mtd_sync;
+	dev->mtd.read = scubed2mtd_read;
 	dev->mtd.priv = dev;
 	dev->mtd.owner = THIS_MODULE;
 
@@ -310,7 +320,7 @@ static struct block2mtd_dev *add_device(char *devname, int erase_size)
 	return dev;
 
 devinit_err:
-	block2mtd_free_device(dev);
+	scubed2mtd_free_device(dev);
 	return NULL;
 }
 
@@ -367,17 +377,17 @@ static inline void kill_final_newline(char *str)
 
 
 #define parse_err(fmt, args...) do {		\
-	ERROR("block2mtd: " fmt "\n", ## args);	\
+	ERROR("scubed2mtd: " fmt "\n", ## args);	\
 	return 0;				\
 } while (0)
 
 #ifndef MODULE
-static int block2mtd_init_called = 0;
-static char block2mtd_paramline[80 + 12]; /* 80 for device, 12 for erase size */
+static int scubed2mtd_init_called = 0;
+static char scubed2mtd_paramline[80 + 12]; /* 80 for device, 12 for erasesize */
 #endif
 
 
-static int block2mtd_setup2(const char *val)
+static int scubed2mtd_setup2(const char *val)
 {
 	char buf[80 + 12]; /* 80 for device, 12 for erase size */
 	char *str = buf;
@@ -419,70 +429,70 @@ static int block2mtd_setup2(const char *val)
 }
 
 
-static int block2mtd_setup(const char *val, struct kernel_param *kp)
+static int scubed2mtd_setup(const char *val, struct kernel_param *kp)
 {
 #ifdef MODULE
-	return block2mtd_setup2(val);
+	return scubed2mtd_setup2(val);
 #else
 	/* If more parameters are later passed in via
-	   /sys/module/block2mtd/parameters/block2mtd
-	   and block2mtd_init() has already been called,
+	   /sys/module/scubed2mtd/parameters/dev
+	   and scubed2mtd_init() has already been called,
 	   we can parse the argument now. */
 
-	if (block2mtd_init_called)
-		return block2mtd_setup2(val);
+	if (scubed2mtd_init_called)
+		return scubed2mtd_setup2(val);
 
 	/* During early boot stage, we only save the parameters
 	   here. We must parse them later: if the param passed
-	   from kernel boot command line, block2mtd_setup() is
+	   from kernel boot command line, scubed2mtd_setup() is
 	   called so early that it is not possible to resolve
 	   the device (even kmalloc() fails). Deter that work to
-	   block2mtd_setup2(). */
+	   scubed2mtd_setup2(). */
 
-	strlcpy(block2mtd_paramline, val, sizeof(block2mtd_paramline));
+	strlcpy(scubed2mtd_paramline, val, sizeof(scubed2mtd_paramline));
 
 	return 0;
 #endif
 }
 
 
-module_param_call(block2mtd, block2mtd_setup, NULL, NULL, 0200);
-MODULE_PARM_DESC(block2mtd, "Device to use. \"block2mtd=<dev>[,<erasesize>]\"");
+module_param_call(dev, scubed2mtd_setup, NULL, NULL, 0200);
+MODULE_PARM_DESC(dev, "Device to use. \"dev=<dev>[,<erasesize>]\"");
 
-static int __init block2mtd_init(void)
+static int __init scubed2mtd_init(void)
 {
 	int ret = 0;
 	INFO("version " VERSION);
 
 #ifndef MODULE
-	if (strlen(block2mtd_paramline))
-		ret = block2mtd_setup2(block2mtd_paramline);
-	block2mtd_init_called = 1;
+	if (strlen(scubed2mtd_paramline))
+		ret = scubed2mtd_setup2(scubed2mtd_paramline);
+	scubed2mtd_init_called = 1;
 #endif
 
 	return ret;
 }
 
 
-static void __devexit block2mtd_exit(void)
+static void __devexit scubed2mtd_exit(void)
 {
 	struct list_head *pos, *next;
 
 	/* Remove the MTD devices */
 	list_for_each_safe(pos, next, &blkmtd_device_list) {
-		struct block2mtd_dev *dev = list_entry(pos, typeof(*dev), list);
-		block2mtd_sync(&dev->mtd);
+		struct scubed2mtd_dev *dev = list_entry(pos, typeof(*dev), list);
+		scubed2mtd_sync(&dev->mtd);
 		del_mtd_device(&dev->mtd);
 		INFO("mtd%d: [%s] removed", dev->mtd.index,
 				dev->mtd.name + strlen("blkmtd: "));
 		list_del(&dev->list);
-		block2mtd_free_device(dev);
+		scubed2mtd_free_device(dev);
 	}
 }
 
 
-module_init(block2mtd_init);
-module_exit(block2mtd_exit);
+module_init(scubed2mtd_init);
+module_exit(scubed2mtd_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Simon Evans <spse@secret.org.uk> and others");
