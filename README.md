@@ -3,7 +3,7 @@
 
 ## Intro
 
-With  [rubberhose] [1] [gone] [2], [stegfs] [3] [vast asleep] [4]  and [phonebook] [5]
+With  [rubberhose][1], [gone][2], [stegfs][3], [vast asleep][4]  and [phonebook][5]
 having a (IMHO) weird and complex architecture, the GNU/Linux user wanting
 plausible deniability is at a loss. Until now...
 
